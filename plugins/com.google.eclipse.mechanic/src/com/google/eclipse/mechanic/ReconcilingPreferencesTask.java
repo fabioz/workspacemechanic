@@ -59,7 +59,7 @@ public abstract class ReconcilingPreferencesTask extends PreferenceReconcilerTas
     for (Entry<Object, Object> entry : properties.entrySet()) {
       String id = (String) entry.getKey();
       // Ignore entries like "file_export_version=3.0"
-      if (!id.isEmpty() && id.charAt(0) == '/') {
+      if (id.length() > 0 && id.charAt(0) == '/') {
         String value = (String) entry.getValue();
         addReconciler(createReconciler(id, value));
       }

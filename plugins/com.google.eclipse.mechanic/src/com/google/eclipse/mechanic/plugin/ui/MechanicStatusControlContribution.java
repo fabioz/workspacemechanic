@@ -8,18 +8,8 @@
  *******************************************************************************/
 package com.google.eclipse.mechanic.plugin.ui;
 
-import com.google.common.collect.Maps;
-import com.google.eclipse.mechanic.IMechanicService;
-import com.google.eclipse.mechanic.IStatusChangeListener;
-import com.google.eclipse.mechanic.MechanicService;
-import com.google.eclipse.mechanic.MechanicStatus;
-import com.google.eclipse.mechanic.RepairDecisionProvider;
-import com.google.eclipse.mechanic.StatusChangedEvent;
-import com.google.eclipse.mechanic.core.recorder.ChangeCollector;
-import com.google.eclipse.mechanic.core.recorder.IPreferenceRecordingService;
-import com.google.eclipse.mechanic.plugin.core.MechanicLog;
-import com.google.eclipse.mechanic.plugin.core.MechanicPlugin;
-import com.google.eclipse.mechanic.plugin.core.OldMechanicPreferences;
+import java.net.MalformedURLException;
+import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
@@ -47,19 +37,30 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.WorkbenchWindowControlContribution;
 
-import java.net.MalformedURLException;
-import java.util.Map;
+import com.google.common.collect.Maps;
+import com.google.eclipse.mechanic.IMechanicService;
+import com.google.eclipse.mechanic.IStatusChangeListener;
+import com.google.eclipse.mechanic.MechanicService;
+import com.google.eclipse.mechanic.MechanicStatus;
+import com.google.eclipse.mechanic.RepairDecisionProvider;
+import com.google.eclipse.mechanic.StatusChangedEvent;
+import com.google.eclipse.mechanic.core.recorder.ChangeCollector;
+import com.google.eclipse.mechanic.core.recorder.IPreferenceRecordingService;
+import com.google.eclipse.mechanic.plugin.core.MechanicLog;
+import com.google.eclipse.mechanic.plugin.core.MechanicPlugin;
+import com.google.eclipse.mechanic.plugin.core.OldMechanicPreferences;
 
 /**
  * Widget that appears in the status bar.
  */
-public class MechanicStatusControlContribution extends WorkbenchWindowControlContribution {
+public class MechanicStatusControlContribution extends
+    WorkbenchWindowControlContribution {
 
   private static final MechanicLog log = MechanicLog.getDefault();
 
   // various actions used in our context menu...
-  private static final Action prefsAction =
-      new OpenPreferencesAction("com.google.eclipse.mechanic.plugin.ui.MechanicPreferencePage");
+  private static final Action prefsAction = new OpenPreferencesAction(
+      "com.google.eclipse.mechanic.plugin.ui.MechanicPreferencePage");
 
   private static final Action helpAction = createHelpAction();
 
@@ -76,7 +77,7 @@ public class MechanicStatusControlContribution extends WorkbenchWindowControlCon
   private IAction stopRecordingAction = new StopRecordingAction();
 
   private IAction showAllTasksAction = new ShowAllTasksAction();
-  
+
   private IAction dumpKeybindingsAction = new DumpKeyBindingsAction();
 
   private final IMechanicService service = MechanicService.getInstance();
@@ -90,7 +91,8 @@ public class MechanicStatusControlContribution extends WorkbenchWindowControlCon
   private Map<DisplayStatus, Image> images;
 
   public MechanicStatusControlContribution() {
-    this.preferenceRecordingService = MechanicPlugin.getDefault().getPreferenceRecordingService();
+    this.preferenceRecordingService = MechanicPlugin.getDefault()
+        .getPreferenceRecordingService();
     // to be registered in our initialize method, and disposed of with us
     this.statusListener = new IStatusChangeListener() {
       public void statusChanged(StatusChangedEvent e) {
@@ -106,7 +108,8 @@ public class MechanicStatusControlContribution extends WorkbenchWindowControlCon
     try {
       return new OpenUrlAction(helpUrl, "Help...");
     } catch (MalformedURLException e) {
-      log.logError(e,  "Could not initialize help action for URL %s: %s", helpUrl, e.getMessage());
+      log.logError(e, "Could not initialize help action for URL %s: %s",
+          helpUrl, e.getMessage());
       return null;
     }
   }
@@ -149,8 +152,9 @@ public class MechanicStatusControlContribution extends WorkbenchWindowControlCon
       String path = String.format("icons/%s.png", ds.name().toLowerCase());
       ImageDescriptor desc = MechanicPlugin.getImageDescriptor(path);
       if (desc == null) {
-        MechanicLog.getDefault().log(new Status(IStatus.ERROR, MechanicPlugin.PLUGIN_ID, 
-            "Can't find image descriptor for resource " + path));
+        MechanicLog.getDefault().log(
+            new Status(IStatus.ERROR, MechanicPlugin.PLUGIN_ID,
+                "Can't find image descriptor for resource " + path));
       } else {
         Image image = desc.createImage();
         map.put(ds, image);
@@ -189,7 +193,8 @@ public class MechanicStatusControlContribution extends WorkbenchWindowControlCon
       public void mouseDoubleClick(MouseEvent e) {
 
         // if the conditions are right, rerun the service
-        if (!service.isStopped() && status != MechanicStatus.FAILED && status != MechanicStatus.UPDATING) {
+        if (!service.isStopped() && status != MechanicStatus.FAILED
+            && status != MechanicStatus.UPDATING) {
           invokeScannerAction.run();
         }
       }
@@ -218,14 +223,14 @@ public class MechanicStatusControlContribution extends WorkbenchWindowControlCon
    */
   private DisplayStatus getDisplayStatus() {
     switch (status) {
-      case PASSED:
-        return DisplayStatus.PASSED;
-      case FAILED:
-        return DisplayStatus.FAILED;
-      case UPDATING:
-        return DisplayStatus.UPDATING;
-      case STOPPED:
-        return DisplayStatus.STOPPED;
+    case PASSED:
+      return DisplayStatus.PASSED;
+    case FAILED:
+      return DisplayStatus.FAILED;
+    case UPDATING:
+      return DisplayStatus.UPDATING;
+    case STOPPED:
+      return DisplayStatus.STOPPED;
     }
     throw new RuntimeException("Unhandled status value: " + status.name());
   }
@@ -310,8 +315,8 @@ public class MechanicStatusControlContribution extends WorkbenchWindowControlCon
     PASSED("All tasks passed. Double click to re-check."), FAILED(new Object() {
       @Override
       public String toString() {
-        return String.format("%d failing tasks. Click to fix.",
-            MechanicService.getInstance().getFailingItemCount());
+        return String.format("%d failing tasks. Click to fix.", MechanicService
+            .getInstance().getFailingItemCount());
       }
     }), UPDATING("Updating..."), STOPPED("Service is stopped.");
 
@@ -368,8 +373,8 @@ public class MechanicStatusControlContribution extends WorkbenchWindowControlCon
      * repairs them.
      */
     private void invokeRepairManager() {
-      RepairDecisionProvider cpro =
-          new UserChoiceDecisionProvider(PlatformUI.getWorkbench().getActiveWorkbenchWindow());
+      RepairDecisionProvider cpro = new UserChoiceDecisionProvider(PlatformUI
+          .getWorkbench().getActiveWorkbenchWindow());
       // TODO(konigsberg): Replace with calls to runRepairManager?
       service.getRepairManager(cpro).run();
     }
@@ -466,10 +471,10 @@ public class MechanicStatusControlContribution extends WorkbenchWindowControlCon
         Shell parentShell = Display.getCurrent().getActiveShell();
         Map<String, String> preferences = collector.getPreferences();
         if (preferences.isEmpty()) {
-          MessageDialog.openWarning(parentShell,  "No preferences",
+          MessageDialog.openWarning(parentShell, "No preferences",
               "No changes to preferences were made.");
         } else {
-          EpfOutputDialog dialog = new EpfOutputDialog(parentShell,  preferences);
+          EpfOutputDialog dialog = new EpfOutputDialog(parentShell, preferences);
           dialog.open();
         }
       } catch (CoreException e) {
@@ -492,13 +497,12 @@ public class MechanicStatusControlContribution extends WorkbenchWindowControlCon
       // Display dialog to get obtain properties of the saved task file
       Shell parentShell = Display.getCurrent().getActiveShell();
       TaskSelectionDialog dialog = new TaskSelectionDialog(parentShell,
-          "All known tasks",
-          MechanicService.getInstance().getAllKnownTasks());
+          "All known tasks", MechanicService.getInstance().getAllKnownTasks());
       dialog.setAddCancelButton(false);
       dialog.open();
     }
   }
-  
+
   /**
    * Action that dumps the existing keybindings to an export file.
    */

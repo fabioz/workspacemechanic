@@ -9,8 +9,11 @@
 
 package com.google.eclipse.mechanic.plugin.ui;
 
-import com.google.eclipse.mechanic.Task;
-import com.google.eclipse.mechanic.RepairDecisionProvider.Decision;
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -18,13 +21,16 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.forms.FormColors;
 import org.eclipse.ui.forms.events.ExpansionAdapter;
 import org.eclipse.ui.forms.events.ExpansionEvent;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
@@ -33,15 +39,13 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.google.eclipse.mechanic.RepairDecisionProvider.Decision;
+import com.google.eclipse.mechanic.Task;
 
 /**
- * Dialog box that displays a list of available Tasks. Users use this
- * dialog box to select Tasks to execute.
- *
+ * Dialog box that displays a list of available Tasks. Users use this dialog box
+ * to select Tasks to execute.
+ * 
  * @author smckay@google.com (Steve McKay)
  */
 public class MechanicDialog extends TitleAreaDialog {
@@ -49,7 +53,7 @@ public class MechanicDialog extends TitleAreaDialog {
   // action choice display names
   private static final String YES = "Fix Now";
   private static final String NO = "Fix Later";
-  private static final String NEVER = "Never Fix"; 
+  private static final String NEVER = "Never Fix";
 
   private final List<Task> items;
   private final Map<Task, Decision> userTaskChoices;
@@ -82,7 +86,7 @@ public class MechanicDialog extends TitleAreaDialog {
     return Collections.unmodifiableMap(userTaskChoices);
   }
 
-  @Override 
+  @Override
   public void create() {
     super.create();
     setTitle("Workspace Mechanic");
@@ -92,9 +96,9 @@ public class MechanicDialog extends TitleAreaDialog {
   /**
    * Here we fill the center area of the dialog
    */
-  @Override 
+  @Override
   protected Control createDialogArea(Composite parent) {
-    // call through to our 
+    // call through to our
     return createForm(parent);
   }
 
@@ -103,8 +107,8 @@ public class MechanicDialog extends TitleAreaDialog {
    */
   @Override
   protected void createButtonsForButtonBar(Composite parent) {
-    createButton(parent, IDialogConstants.OK_ID,
-        IDialogConstants.OK_LABEL, true);
+    createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL,
+        true);
     createButton(parent, IDialogConstants.CANCEL_ID,
         IDialogConstants.CANCEL_LABEL, false);
   }
@@ -119,13 +123,25 @@ public class MechanicDialog extends TitleAreaDialog {
    */
   private Control createForm(Composite parent) {
 
-    final FormToolkit toolkit = new FormToolkit(parent.getDisplay());
+    Display display = parent.getDisplay();
+    final FormToolkit toolkit = new FormToolkit(display);
+    FormColors colors = toolkit.getColors();
+
+    Shell activeShell = display.getActiveShell();
+
+    Color background = activeShell.getBackground();
+    Color foreground = activeShell.getForeground();
+
+    colors.setBackground(background);
+    colors.setForeground(foreground);
+    toolkit.setBackground(background);
+
     final ScrolledForm form = toolkit.createScrolledForm(parent);
 
     /*
-     * For the life of me I can't understand why I have to supply
-     * a GridData instance to the form object in order to get the form
-     * to fill the dialog area.
+     * For the life of me I can't understand why I have to supply a GridData
+     * instance to the form object in order to get the form to fill the dialog
+     * area.
      * 
      * BTW, I only found this out through trial and error.
      */
@@ -137,19 +153,32 @@ public class MechanicDialog extends TitleAreaDialog {
     layout.verticalSpacing = 10;
 
     form.getBody().setLayout(layout);
-    form.getBody().setLayoutData(new TableWrapData(
-        TableWrapData.FILL_GRAB, TableWrapData.FILL_GRAB, 1, 3));
+    form.getBody().setLayoutData(
+        new TableWrapData(TableWrapData.FILL_GRAB, TableWrapData.FILL_GRAB, 1,
+            3));
 
     for (Task item : items) {
 
       // add an expandable description of the task, with a pretty title
-      ExpandableComposite ec = toolkit.createExpandableComposite(form.getBody(),
-          ExpandableComposite.TREE_NODE | ExpandableComposite.CLIENT_INDENT);
+      ExpandableComposite ec = toolkit.createExpandableComposite(
+          form.getBody(), ExpandableComposite.TREE_NODE
+              | ExpandableComposite.CLIENT_INDENT);
+      try {
+        // ec.setTitleBarForeground(foreground); -- it doesn't work because
+        // hasTitleBar() returns false, so, the color
+        // isn't really set, although it's used.
+        Field field = ExpandableComposite.class
+            .getDeclaredField("titleBarForeground"); //$NON-NLS-1$
+        field.setAccessible(true);
+        field.set(ec, foreground);
+      } catch (Exception e1) {
+        e1.printStackTrace();
+      }
       ec.setText(item.getTitle());
       Label label = toolkit.createLabel(ec, item.getDescription(), SWT.WRAP);
       ec.setClient(label);
       ec.addExpansionListener(new ExpansionAdapter() {
-        @Override 
+        @Override
         public void expansionStateChanged(ExpansionEvent e) {
           form.reflow(true);
         }
@@ -165,9 +194,9 @@ public class MechanicDialog extends TitleAreaDialog {
   }
 
   /**
-   * Creates a new combo box, initilizes the enty values, and configures
-   * it with a listener capable of updating the right entry in our
-   * map of item->decision.
+   * Creates a new combo box, initilizes the enty values, and configures it with
+   * a listener capable of updating the right entry in our map of
+   * item->decision.
    */
   private Combo createDecisionCombo(Composite parent, Task item) {
     Combo combo = new Combo(parent, SWT.READ_ONLY);
@@ -181,18 +210,18 @@ public class MechanicDialog extends TitleAreaDialog {
   }
 
   /**
-   * Listens to combo box "selection" events. Updates the entry in the
-   * outer classes map of item->decision.
+   * Listens to combo box "selection" events. Updates the entry in the outer
+   * classes map of item->decision.
    */
   private class ComboListener extends SelectionAdapter {
-    
+
     private final Task item;
 
     public ComboListener(Task item) {
       this.item = item;
     }
 
-    @Override 
+    @Override
     public void widgetSelected(SelectionEvent e) {
       Combo combo = (Combo) e.getSource();
       int index = combo.getSelectionIndex();

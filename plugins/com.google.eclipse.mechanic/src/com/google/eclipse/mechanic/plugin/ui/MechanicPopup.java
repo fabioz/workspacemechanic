@@ -72,7 +72,7 @@ public class MechanicPopup extends AbstractPopup {
 
   private Font createBoldFont(Font font) {
     FontData[] fontDatas = font.getFontData();
-    for (FontData fd: fontDatas) {
+    for (FontData fd : fontDatas) {
       fd.setStyle(SWT.BOLD);
     }
     return new Font(font.getDevice(), fontDatas);
@@ -81,15 +81,16 @@ public class MechanicPopup extends AbstractPopup {
   @Override
   public void createContents(Composite parent) {
     Label label = new Label(parent, SWT.WRAP);
-    label.setText(
-        "The Workspace Mechanic found\nissues that need your attention.");
+    label
+        .setText("The Workspace Mechanic found\nissues that need your attention.");
 
-    createHyperlink(parent, "View and correct configuration issues", new Runnable() {
-      public void run() {
-        close();
-        correctConfigurationIssues();
-      }
-    });
+    createHyperlink(parent, "View and correct configuration issues",
+        new Runnable() {
+          public void run() {
+            close();
+            correctConfigurationIssues();
+          }
+        });
 
     createHyperlink(parent, "Disable this popup", new Runnable() {
       public void run() {
@@ -99,7 +100,7 @@ public class MechanicPopup extends AbstractPopup {
     });
   }
 
-  private Hyperlink createHyperlink(Composite parent, String text,
+  private Hyperlink createHyperlink(final Composite parent, String text,
       final Runnable runnable) {
     Hyperlink hyperlink = new Hyperlink(parent, 0) {
       @Override
@@ -111,6 +112,9 @@ public class MechanicPopup extends AbstractPopup {
         if (clientArea.width == 0 || clientArea.height == 0) {
           return;
         }
+
+        this.setBackground(parent.getBackground());
+        this.setForeground(parent.getForeground());
         paintHyperlink(gc);
       }
     };
