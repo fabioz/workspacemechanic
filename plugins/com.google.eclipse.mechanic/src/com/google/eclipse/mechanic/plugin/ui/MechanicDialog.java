@@ -30,6 +30,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.FormColors;
 import org.eclipse.ui.forms.events.ExpansionAdapter;
 import org.eclipse.ui.forms.events.ExpansionEvent;
@@ -128,7 +130,16 @@ public class MechanicDialog extends TitleAreaDialog {
     FormColors colors = toolkit.getColors();
 
     Shell activeShell = display.getActiveShell();
-
+    if (activeShell == null) {
+      IWorkbenchWindow window = PlatformUI.getWorkbench()
+          .getActiveWorkbenchWindow();
+      if (window != null) {
+        activeShell = window.getShell();
+      }
+    }
+    if (activeShell == null) {
+      activeShell = Display.getDefault().getActiveShell();
+    }
     Color background = activeShell.getBackground();
     Color foreground = activeShell.getForeground();
 
