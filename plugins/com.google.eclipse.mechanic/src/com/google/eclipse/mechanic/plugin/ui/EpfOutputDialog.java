@@ -29,6 +29,11 @@ import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -37,6 +42,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -157,10 +163,41 @@ public class EpfOutputDialog extends BaseOutputDialog {
     tableContainer.setLayout(columnLayout);
 
     acceptedPreferences =
-        CheckboxTableViewer.newCheckList(tableContainer, SWT.SINGLE | SWT.FULL_SELECTION);
-    Table acceptedPreferencesTable = acceptedPreferences.getTable();
+        CheckboxTableViewer.newCheckList(tableContainer, SWT.MULTI | SWT.FULL_SELECTION);
+    final Table acceptedPreferencesTable = acceptedPreferences.getTable();
     acceptedPreferencesTable.setHeaderVisible(true);
     acceptedPreferencesTable.setLinesVisible(true);
+    
+    acceptedPreferencesTable.addKeyListener(new KeyListener() {
+      
+      public void keyReleased(KeyEvent e) {
+        if(e.keyCode == 'c' && e.stateMask == SWT.CTRL){
+          Clipboard clipboard = new Clipboard(e.widget.getDisplay());
+          TextTransfer textTransfer = TextTransfer.getInstance();
+          
+          TableItem[] selection = acceptedPreferencesTable.getSelection();
+          StringBuffer buf = new StringBuffer();
+          int columnCount = acceptedPreferencesTable.getColumnCount();
+          for (TableItem tableItem : selection) {
+            for (int i = 0; i < columnCount; i++) {
+              if(i != 0){
+                buf.append("\t");
+              }
+              buf.append(tableItem.getText(i));
+              
+            }
+            buf.append("\n");
+          }
+          clipboard.setContents(new Object[] { buf.toString() },
+              new Transfer[] { textTransfer });
+
+          clipboard.dispose();
+        }
+      }
+      
+      public void keyPressed(KeyEvent e) {
+      }
+    });
 
     // Setup table columns
     TableColumn keyColumn = new TableColumn(acceptedPreferencesTable, SWT.LEFT);
