@@ -22,7 +22,7 @@ import com.google.eclipse.mechanic.internal.VariableManagerStringParser;
  */
 public class DirectoryOrUrlEditor extends ListEditor {
 
-  private static final ResourceTaskProviderParser parser =
+  public static final ResourceTaskProviderParser parser =
       new ResourceTaskProviderParser(VariableManagerStringParser.INSTANCE);
 
   public DirectoryOrUrlEditor(String name, String labelText, Composite parent) {

@@ -20,6 +20,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -40,6 +41,7 @@ import org.eclipse.swt.widgets.Text;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.eclipse.mechanic.internal.TaskType;
+import com.google.eclipse.mechanic.plugin.core.IMechanicPreferences;
 import com.google.eclipse.mechanic.plugin.core.MechanicPlugin;
 
 /**
@@ -197,6 +199,23 @@ public abstract class BaseOutputDialog extends Dialog {
         willVerifyOverwrite = true;
         validate();
       }});
+    IPreferenceStore preferenceStore = MechanicPlugin.getDefault().getPreferenceStore();
+    String dirs = preferenceStore.getString(IMechanicPreferences.DIRS_PREF);
+    String[] parse = DirectoryOrUrlEditor.parser.parse(dirs);
+    if(parse.length > 0 && parse[0].length() > 0){
+      String dir = parse[0];
+      File fileDir = new File(dir);
+      if(fileDir.exists()){
+        for(int i=0;i<300;i++){
+          File epfFile = new File(fileDir, "apply_prefs_"+i+".epf");
+          if(!epfFile.exists()){
+            savedLocationText.setText(epfFile.getAbsolutePath());
+            break;
+          }
+        }
+      }
+    }
+    
 
     // TODO: this button belongs in the same line as the textBox above
     Button browseButton = new Button(container, SWT.PUSH);
