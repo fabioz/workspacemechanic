@@ -15,7 +15,9 @@ import java.util.EnumSet;
 import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
@@ -205,6 +207,13 @@ public abstract class BaseOutputDialog extends Dialog {
     if(parse.length > 0 && parse[0].length() > 0){
       String dir = parse[0];
       File fileDir = new File(dir);
+      if(!fileDir.exists()){
+        try {
+          fileDir.mkdirs();
+        } catch (Exception e) {
+          MechanicPlugin.getDefault().getLog().log(new Status(IStatus.ERROR, MechanicPlugin.PLUGIN_ID, e.getMessage(), e));
+        }
+      }
       if(fileDir.exists()){
         for(int i=0;i<300;i++){
           File epfFile = new File(fileDir, "apply_prefs_"+i+".epf");

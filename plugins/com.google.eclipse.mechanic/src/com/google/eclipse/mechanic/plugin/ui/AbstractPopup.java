@@ -9,10 +9,12 @@
 
 package com.google.eclipse.mechanic.plugin.ui;
 
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
@@ -22,6 +24,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
+
+import com.google.eclipse.mechanic.plugin.core.MechanicPlugin;
 
 /**
  * UI-portion of the error popup.
@@ -68,6 +72,9 @@ public abstract class AbstractPopup {
   public void open() {
     shell.setLayout(new FillLayout());
     shell.setBackgroundMode(SWT.INHERIT_DEFAULT);
+    Image image = MechanicPlugin.getPopupImage();
+    shell.setImage(image);
+    
     shell.setBackground(backgroundColor);
     Composite top = new Group(shell, SWT.NONE);
     // Closes when clicking in some whitespace, but not enough.

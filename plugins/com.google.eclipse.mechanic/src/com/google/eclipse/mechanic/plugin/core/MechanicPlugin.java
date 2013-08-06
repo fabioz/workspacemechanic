@@ -9,7 +9,10 @@
 
 package com.google.eclipse.mechanic.plugin.core;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -78,6 +81,23 @@ public class MechanicPlugin extends AbstractUIPlugin {
   public static MechanicPlugin getDefault() {
     return plugin;
   }
+  
+  
+  private static Image popupImage;
+  
+  public static Image getPopupImage() {
+    if(popupImage == null){
+      try {
+        ImageDescriptor imageDescriptor = MechanicPlugin.getImageDescriptor("icons/updating.png");
+        popupImage = imageDescriptor.createImage();
+      } catch (Exception e) {
+        getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, e.getMessage(), e));
+        return null;
+      }
+    }
+    return popupImage;
+  }
+
 
   /**
    * Returns an image descriptor for the image file at the given plug-in
