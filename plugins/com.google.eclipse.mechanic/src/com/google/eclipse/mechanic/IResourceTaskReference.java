@@ -12,15 +12,22 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.google.eclipse.mechanic.plugin.core.ResourceTaskProvider;
-
 /**
  * A reference to a resource-based task.
+ *
+ * <p>About {@link #getPath()}: For the file and URI-based providers, their fundamental
+ * use provides enough distinction, but custom providers should return references with
+ * information about their source. For instance, the sample
+ * {@code com.google.eclipse.mechanic.samples.InMemoryTaskProvider} puts "InMemoryTaskProvider:"
+ * in front all its resources paths.
+ *
+ * <p>Since some tasks can come from disk, and it's expected that most of them will,
+ * task scanners should rely on a null-test of {@link #asFile()} to see if that's the case.
+ * So when identifying if a resource has changed, the caller might typically rely on
+ * {@link #getLastModified()}, which works great if it's for a file, but not for a URL-based
+ * resource. In that case, use {@link #computeMD5()}.
  */
 public interface IResourceTaskReference {
-  /** Return the provider that created this task reference. */
-  ResourceTaskProvider getProvider();
-
   /** Return the name of the task reference. This is typically a local name. */
   String getName();
 
@@ -32,11 +39,14 @@ public interface IResourceTaskReference {
    */
   long getLastModified() throws IOException;
 
-  /** Return the task reference path. This is typically a full path. */
+  /** 
+   * Return the task reference path. Provide enough metadata to give it some distinction,
+   * separate from other providers.
+   */
   String getPath();
 
   /**
-   * Return the File representation of this resource. Is {@code null} when this file isn't on disk.
+   * Return the File representation of this resource. Is {@code null} it's not a File.
    */
   File asFile();
 

@@ -9,6 +9,11 @@
 
 package com.google.eclipse.mechanic.internal;
 
+import java.util.List;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.eclipse.mechanic.CompositeTaskInterface;
 import com.google.eclipse.mechanic.TaskCollector;
 import com.google.eclipse.mechanic.TaskScanner;
 
@@ -16,7 +21,21 @@ import com.google.eclipse.mechanic.TaskScanner;
  * Provides support for loading tasks defined in extension points.
  */
 public class ExtensionPointScanner implements TaskScanner {
+
+  private Supplier<List<CompositeTaskInterface>> taskSupplier;
+
+  public ExtensionPointScanner() {
+    this(TasksExtensionPoint.getInstance());
+  }
+
+  @VisibleForTesting
+  ExtensionPointScanner(Supplier<List<CompositeTaskInterface>> taskSupplier) {
+    this.taskSupplier = taskSupplier;
+  }
+
   public void scan(TaskCollector collector) {
-    new TasksExtensionPoint().getTasks(collector);
+    for (CompositeTaskInterface task : taskSupplier.get()) {
+      collector.collect(task);
+    }
   }
 }

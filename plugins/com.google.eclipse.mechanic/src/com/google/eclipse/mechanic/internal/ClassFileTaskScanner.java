@@ -17,7 +17,8 @@ import java.util.logging.Logger;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
-import com.google.eclipse.mechanic.DirectoryIteratingTaskScanner;
+import com.google.eclipse.mechanic.ListCollector;
+import com.google.eclipse.mechanic.ResourceTaskScanner;
 import com.google.eclipse.mechanic.IResourceTaskProvider;
 import com.google.eclipse.mechanic.IResourceTaskReference;
 import com.google.eclipse.mechanic.Task;
@@ -34,7 +35,7 @@ import com.google.eclipse.mechanic.plugin.core.MechanicPlugin;
  *
  * @author smckay@google.com (Steve McKay)
  */
-public final class ClassFileTaskScanner extends DirectoryIteratingTaskScanner {
+public final class ClassFileTaskScanner extends ResourceTaskScanner {
 
   private static final Logger DEBUGLOG = Logger.getLogger(
       ClassFileTaskScanner.class.getName());
@@ -70,11 +71,9 @@ public final class ClassFileTaskScanner extends DirectoryIteratingTaskScanner {
     if (!(taskSource instanceof FileTaskProvider)) {
       DEBUGLOG.log(Level.FINE, "Not loading class tasks from {0}", taskSource);
     }
-    List<IResourceTaskReference> taskReferences = taskSource.getTaskReferences(EXT_PATH, ".class");
-    if (taskReferences == null) {
-      return;
-    }
-    for (IResourceTaskReference taskRef : taskReferences) {
+    ListCollector<IResourceTaskReference> taskCollector = ListCollector.create();
+    taskSource.collectTaskReferences(EXT_PATH, ".class", taskCollector);
+    for (IResourceTaskReference taskRef : taskCollector.get()) {
       Class<?> clazz = null;
       try {
 
@@ -122,7 +121,7 @@ public final class ClassFileTaskScanner extends DirectoryIteratingTaskScanner {
         Task item = createInstance(clazz);
         if (item != null) {
           DEBUGLOG.log(Level.FINE, "Instantiated task: {0}", clazz);
-          collector.add(item);
+          collector.collect(item);
         }
       } catch (RuntimeException e) {
         mechanicLog.logError(e, "Couldn't instantiate class: %s", clazz);

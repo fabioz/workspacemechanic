@@ -9,27 +9,30 @@
 
 package com.google.eclipse.mechanic.internal;
 
+import java.util.List;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
 import com.google.eclipse.mechanic.TaskCollector;
 import com.google.eclipse.mechanic.TaskScanner;
 import com.google.eclipse.mechanic.plugin.core.MechanicLog;
 
 /**
  * A {@link TaskScanner} that loads and runs all other {@link TaskScanner}s.
- *
- * @author smckay@google.com (Steve McKay)
  */
 public class RootTaskScanner implements TaskScanner {
 
   private static RootTaskScanner instance;
 
   private final MechanicLog log;
-  private final ScannersExtensionPointInterface scannersExtensionPoint;
+  private final Supplier<List<TaskScanner>> scannersExtensionPoint;
 
   public RootTaskScanner() {
-    this(MechanicLog.getDefault(), new ScannersExtensionPoint());
+    this(MechanicLog.getDefault(), ScannersExtensionPoint.getInstance());
   }
-  
-  RootTaskScanner(MechanicLog log, ScannersExtensionPointInterface scannersExtensionPoint) {
+
+  @VisibleForTesting
+  RootTaskScanner(MechanicLog log, Supplier<List<TaskScanner>> scannersExtensionPoint) {
     this.log = log;
     this.scannersExtensionPoint = scannersExtensionPoint;
   }
@@ -42,7 +45,7 @@ public class RootTaskScanner implements TaskScanner {
   }
 
   public void scan(TaskCollector collector) {
-    for (TaskScanner scanner : scannersExtensionPoint.getScanners()) {
+    for (TaskScanner scanner : scannersExtensionPoint.get()) {
       try {
         scanner.scan(collector);
       } catch (RuntimeException e) {

@@ -10,9 +10,9 @@
 package com.google.eclipse.mechanic.plugin.core;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -25,6 +25,7 @@ import org.eclipse.core.runtime.Preferences.IPropertyChangeListener;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.eclipse.mechanic.IResourceTaskProvider;
 import com.google.eclipse.mechanic.Task;
 import com.google.eclipse.mechanic.internal.BlockedTaskIdsParser;
 import com.google.eclipse.mechanic.internal.FileTaskProvider;
@@ -42,7 +43,7 @@ import com.google.eclipse.mechanic.internal.VariableManagerStringParser;
  *
  * @deprecated use MechanicPreferences.
  */
-@SuppressWarnings("deprecation") // Uses the old-style API.
+@Deprecated
 public class OldMechanicPreferences {
  
   /**
@@ -72,43 +73,40 @@ public class OldMechanicPreferences {
    *
    * @return list of task sources where tasks may be found.
    */
-  public static List<ResourceTaskProvider> getTaskProviders() {
+  public static List<IResourceTaskProvider> getTaskProviders() {
     String paths = getString(IMechanicPreferences.DIRS_PREF);
 
     ResourceTaskProviderParser parser = new ResourceTaskProviderParser(VariableManagerStringParser.INSTANCE);
-    List<ResourceTaskProvider> providers = Lists.newArrayList();
+    List<IResourceTaskProvider> providers = Lists.newArrayList();
     for (String source : parser.parse(paths)) {
-      ResourceTaskProvider provider = toProvider(source);
-      if (provider != null) {
-        IStatus initializationStatus = provider.initialize();
-        if (initializationStatus.isOK()) {
-          providers.add(provider);
-          sourcesFailingInitialization.remove(source);
-        } else {
-          if (!sourcesFailingInitialization.containsKey(source)) {
-            sourcesFailingInitialization.put(source, source);
-            log.log(initializationStatus);
-          }
+      try {
+        ResourceTaskProvider provider = toProvider(source);
+        providers.add(provider);
+        sourcesFailingInitialization.remove(source);
+      } catch (IOException e) {
+        if (!sourcesFailingInitialization.containsKey(source)) {
+          sourcesFailingInitialization.put(source, source);
+          log.logError(e);
         }
       }
     }
     return providers;
   }
 
-  private static ResourceTaskProvider toProvider(String source) {
+  private static ResourceTaskProvider toProvider(String source) throws IOException {
     URI uri;
     try {
       uri = new URI(source);
       if (uri.getScheme() != null) {
-        return new UriTaskProvider(uri, UriCaches.getStateSensitiveCache(),
+        return UriTaskProvider.newInstance(uri, UriCaches.getStateSensitiveCache(),
 //             UriCaches.getLifetimeCache());
             UriCaches.getStateSensitiveCache());
       } else {
-        return new FileTaskProvider(new File(source));
+        return FileTaskProvider.newInstance(new File(source));
       }
     } catch (URISyntaxException e) {
       // This is a fall-through for files like C:\path\to\file
-      return new FileTaskProvider(new File(source));
+      return FileTaskProvider.newInstance(new File(source));
     }
   }
 
@@ -135,7 +133,7 @@ public class OldMechanicPreferences {
 
     String val = getString(IMechanicPreferences.BLOCKED_PREF);
     Set<String> set = Sets.newHashSet();
-    Collections.addAll(set, parser.parse(val));
+    set.addAll(parser.parse(val));
     return set;
   }
 
@@ -145,7 +143,7 @@ public class OldMechanicPreferences {
   public static void setBlockedTaskIds(Set<String> ids) {
     BlockedTaskIdsParser parser = new BlockedTaskIdsParser();
 
-    String unparse = parser.unparse(ids.toArray(new String[0]));
+    String unparse = parser.unparse(ids);
 
     Preferences prefs = getPreferences();
     prefs.setValue(IMechanicPreferences.BLOCKED_PREF, unparse);
