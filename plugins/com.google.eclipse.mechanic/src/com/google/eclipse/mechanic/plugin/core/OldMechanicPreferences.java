@@ -86,7 +86,7 @@ public class OldMechanicPreferences {
       } catch (IOException e) {
         if (!sourcesFailingInitialization.containsKey(source)) {
           sourcesFailingInitialization.put(source, source);
-          log.logError(e);
+          //log.logError(e);
         }
       }
     }
