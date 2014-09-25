@@ -33,7 +33,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.menus.WorkbenchWindowControlContribution;
 
@@ -168,7 +170,12 @@ public class MechanicStatusControlContribution extends
      * Don't do anything if the workbench is closed. Without this check we were
      * causing stack traces when workbench is closing.
      */
-    if (this.getWorkbenchWindow().getWorkbench().isClosing()) {
+    IWorkbenchWindow workbenchWindow = this.getWorkbenchWindow();
+    if(workbenchWindow == null){
+      return;
+    }
+    IWorkbench workbench = workbenchWindow.getWorkbench();
+    if (workbench == null || workbench.isClosing()) {
       return;
     }
 
